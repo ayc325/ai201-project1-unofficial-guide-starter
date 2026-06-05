@@ -10,6 +10,7 @@
 ## Domain
 
 <!-- What domain did you choose? Why is this knowledge valuable and hard to find through official channels? -->
+     Retiring "Ideas" LEGO sets are useful to track because once LEGO announces a set is retiring, remaining retail stock often disappears quickly, making the set harder to find at regular prices.
 
 ---
 
@@ -18,13 +19,13 @@
 <!-- List your specific sources: URLs, subreddit names, forum threads, or file descriptions.
      Aim for at least 10 sources that together cover different subtopics or perspectives within your domain. -->
 
-| # | Source | Description | URL or location |
-|---|--------|-------------|-----------------|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
+| # | Source | Type | URL or file path |
+|---|--------|------|-----------------|
+| 1 | LEGO Official Website | Official LEGO Website | https://www.lego.com/en-us/categories/last-chance-to-buy?filters.i0.key=categories.id&filters.i0.values.i0=2237887c-51ec-4e65-becf-117ae6180bf0 |
+| 2 | Stone Wars | LEGO News Site | https://stonewars.com/retiring-2026/#lego-ideas |
+| 3 | Brick Fanatics | LEGO News Site | https://www.brickfanatics.com/every-lego-set-retiring-this-year-and-beyond#retiring-lego-ideas-sets |
+| 4 | Brick Tap - LEGO Set List - Retirement Dates + Store Exclusivity | CSV | "Brick Tap - LEGO Set List - Retirement Dates + Store Exclusivity".csv  |
+| 5 | BrickLink FAQ | FAQ Page | https://www.bricklink.com/v3/designer-program/faq.page |
 | 6 | | | |
 | 7 | | | |
 | 8 | | | |
