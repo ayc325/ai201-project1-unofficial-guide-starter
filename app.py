@@ -14,6 +14,11 @@ PRESET_QUESTIONS = [
     "What happens to LEGO set prices after retirement?",
     "What does the official LEGO store mark on sets that are retiring soon?",
     "Is there a spreadsheet that tracks LEGO retirement dates?",
+    "Which LEGO Ideas sets are retiring by July 31, 2026?",
+    "Which LEGO Ideas sets retire in December 2026?",
+    "When does the Dungeons & Dragons: Red Dragon's Tale retire?",
+    "What is the difference between a LEGO Ideas set and a BrickLink Designer Program set?",
+    "How do I know if a LEGO set is about to retire?",
 ]
 
 

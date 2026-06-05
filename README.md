@@ -79,8 +79,22 @@ Retiring LEGO IDEAS sets are useful to track because once LEGO announces a set i
      the mechanism. -->
 
 **System prompt grounding instruction:**
+```
+     "You are a helpful assistant for the Unofficial LEGO Ideas Retirement Guide.\n\n"
+     "Rules:\n"
+     "1. Answer ONLY using the documents provided below. Do not use any outside knowledge.\n"
+     "2. Every factual claim must be attributed inline using the format: "
+     "'According to [source: filename], ...'\n"
+     "3. If multiple sources support a claim, cite each one.\n"
+     "4. If the documents do not contain enough information to answer, respond with: "
+     "'I don't have enough information on that in my sources.'\n"
+     "5. Never guess, infer, or fill in details not explicitly stated in the documents.\n\n"
+     f"Documents:\n{context}\n\n"
+     f"Question: {question}"
+```
 
 **How source attribution is surfaced in the response:**
+     - According to [source: stone_wars_retiring.txt], the 21350 Jaws set retires in 2026, 07. Additionally, According to [source: brick_economy_retiring.txt], the 21350 Jaws set is expected to retire at the End of 2026 with a 90.2% probability.
 
 ---
 
@@ -92,14 +106,18 @@ Retiring LEGO IDEAS sets are useful to track because once LEGO announces a set i
 
 | # | Question | Expected answer | System response (summarized) | Retrieval quality | Response accuracy |
 |---|----------|-----------------|------------------------------|-------------------|-------------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
+| # | Question | Expected answer |
+|---|----------|-----------------|
+| 1 | When does the Jaws set retire? | July 31, 2026 | [source: stone_wars_retiring.txt], the 21350 Jaws set retires in 07 2026 | partially relevant | accurate
+| 2 | In what waves do LEGO retirmenets occur in? | January, June/July, and December | [source: bamgoodbricks_guide.txt], ... in January, June/July, and December. | relevant | accurate
+| 3 | What happens to LEGO set prices after retirement? | Some go up, some stay flat, some decrease. | some sets climb slowly over years, while others spike within months ... then see prices normalize ... some sets remain flat or decline in value after retirement. | relevant | accurate
+| 4 | What does the official LEGO store mark on sets that are retiring soon? | Last Chance to Buy or Retiring Soon | once a set is marked as “Retiring Soon” or “Last Chance to Buy,” remaining stock can disappear quickly | partially relevant | accurate
+| 5 | Is there a spreadsheet that tracks LEGO retirement dates? | Yes, Brick Tap does. | there is a spreadsheet linked in the Legoleak sub that tracks LEGO retirement dates | partially relevant | partially accurate, doesn't include the sheet name
 
-**Retrieval quality:** Relevant / Partially relevant / Off-target  
+**Retrieval quality:** Relevant / Partially relevant / Off-target
+     - Relevant  
 **Response accuracy:** Accurate / Partially accurate / Inaccurate
+     - Accurate
 
 ---
 
@@ -116,13 +134,19 @@ Retiring LEGO IDEAS sets are useful to track because once LEGO announces a set i
      "The embedding model treated the professor's nickname as out-of-vocabulary and returned
      results from an unrelated review" is an explanation. -->
 
-**Question that failed:**
+ 
 
-**What the system returned:**
+**Question that failed & What the system returned:**
+
+There was a specific test case to test when the Dungeons and Dragons set would retire. This prompt was answered correctly with the date July 2026. However, when asked what sets are retiring in July 2026, there were no valid answers and I would receive a response like "I have no information about sets retiring in 2026".
 
 **Root cause (tied to a specific pipeline stage):**
 
+The Top-K value being at 5 was not optimal as it didn't receive enough responses during the chunking stage. In addition, the LLM was missing semantic context for date abbreviations.
+
 **What you would change to fix it:**
+
+I had to add a helper function in chunk.py to consider date abbreviations and also had to increase the Top-K value to 7 so it took in more chunks. This change helped improve the response and receive an accurate response.
 
 ---
 
@@ -132,8 +156,10 @@ Retiring LEGO IDEAS sets are useful to track because once LEGO announces a set i
      Answer both questions with at least 2–3 sentences each. -->
 
 **One way the spec helped you during implementation:**
+Produced clear responses without wiggle room for error. It changed my view of programming w/ AI as my usual way usually leads to diverged answers. 
 
 **One way your implementation diverged from the spec, and why:**
+When I got frustrated with the failing test (now changed but also passes when tested again), I just told AI to "fix it" or "I'm not sure why this isn't working. Make changes to the corresponding files" which might've provided to many possible decision makings on Claude. The helper function portion was not part of the spec.
 
 ---
 
@@ -151,11 +177,29 @@ Retiring LEGO IDEAS sets are useful to track because once LEGO announces a set i
 **Instance 1**
 
 - *What I gave the AI:*
+     - i feel like the distance for these aren't great... do you have other queries that might work well with the data from @documents/ ?
 - *What it produced:*
+     - Based on what's actually in your documents, here are queries that should score much better because the vocabulary matches the chunk text more directly:
+
+     Specific set lookups — these will pull exact retirement date chunks:
+
+     "When does the Jaws set retire?"
+     "When does the Grand Piano LEGO set retire?"
+     "What LEGO Ideas sets retire in December 2026?"
+     Vocabulary that appears verbatim in bamgoodbricks_guide.txt:
+
+     "What happens to LEGO set prices after retirement?"
+     "What is the difference between a LEGO set retiring and being discontinued?"
+     "Why do LEGO sets retire?"
 - *What I changed or overrode:*
+     - I followed through with the initial change, but kept trying the initial queries for testing.
 
 **Instance 2**
 
 - *What I gave the AI:*
+     - I think I'm missing the interface portion of this pipeline diagram... I should have a list of questions that the user can select from a list where the LLM will be called and then return a structured/grounded, traceable response with the source. I am using Gradio with this sample code: 
+     (Added the instructions for this from the project 1 instructions)
 - *What it produced:*
+     I'll build all three pieces in parallel — update planning.md diagram, create query.py (the ask() function), and create app.py (the Gradio interface), then update requirements.txt.
 - *What I changed or overrode:*
+     I declined all changes and rephrased the prompt to take it step by step. I started with the query, and then the app.py. Since it forgot about the planning.md, I had to tell it again to edit that as well.
