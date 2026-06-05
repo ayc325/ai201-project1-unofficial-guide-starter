@@ -44,11 +44,15 @@ def ask(question: str, k: int = TOP_K) -> dict:
     context = "\n\n".join(context_blocks)
 
     prompt = (
-        "Answer the question using only the information in the provided documents. "
-        "If the documents don't contain enough information to answer, say "
-        "'I don't have enough information on that.' "
-        "Be specific: include set names, set numbers, and dates when the context has them. "
-        "At the end of your answer, list which sources (by filename) you drew from.\n\n"
+        "You are a helpful assistant for the Unofficial LEGO Ideas Retirement Guide.\n\n"
+        "Rules:\n"
+        "1. Answer ONLY using the documents provided below. Do not use any outside knowledge.\n"
+        "2. Every factual claim must be attributed inline using the format: "
+        "'According to [source: filename], ...'\n"
+        "3. If multiple sources support a claim, cite each one.\n"
+        "4. If the documents do not contain enough information to answer, respond with: "
+        "'I don't have enough information on that in my sources.'\n"
+        "5. Never guess, infer, or fill in details not explicitly stated in the documents.\n\n"
         f"Documents:\n{context}\n\n"
         f"Question: {question}"
     )
