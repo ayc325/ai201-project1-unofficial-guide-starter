@@ -41,13 +41,13 @@ Retiring LEGO IDEAS sets are useful to track because once LEGO announces a set i
 
 - Hybrid Chunking
 
-**Chunk size:**
+**Chunk size: ~150 tokens**
 
-**Overlap:**
+**Overlap: 50 to 75 tokens**
 
-**Why these choices fit your documents:**
+**Why these choices fit your documents: Through the clean up process, the source of each file drastically got reduced. This led to it becoming smaller chunks which was originally 300 tokens. In addition, some overlap is required so that there is useful information in every chunk about retired sets.**
 
-**Final chunk count:**
+**Final chunk count: 55 chunks**
 
 ---
 
@@ -59,9 +59,13 @@ Retiring LEGO IDEAS sets are useful to track because once LEGO announces a set i
      Consider: context length limits, multilingual support, accuracy on domain-specific text,
      latency, and local vs. API-hosted. -->
 
-**Model used:**
+**Model used: all-MiniLM-L6-v2**
 
 **Production tradeoff reflection:**
+     - Context length: text-embedding-3-large (OpenAI) or embed-english-v3.0 (Cohere) handle longer chunks without truncation
+     - Domain accuracy: a model fine-tuned on product/retail text would handle set names and part numbers better
+     - Latency: all-MiniLM-L6-v2 runs locally and is fast; larger models add API round-trip latency
+     - Some inaccuracy is ok because there's no harm in the LLM predicting a LEGO set that may retire this year vs next year since all LEGO sets eventually retire
 
 ---
 
