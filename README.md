@@ -47,7 +47,7 @@ Retiring LEGO IDEAS sets are useful to track because once LEGO announces a set i
 
 **Why these choices fit your documents: Through the clean up process, the source of each file drastically got reduced. This led to it becoming smaller chunks which was originally 300 tokens. In addition, some overlap is required so that there is useful information in every chunk about retired sets.**
 
-**Final chunk count: 55 chunks**
+**Final chunk count: 76 chunks**
 
 ---
 

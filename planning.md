@@ -84,11 +84,11 @@
 
 | # | Question | Expected answer |
 |---|----------|-----------------|
-| 1 | What is the approximate lifecycle length of a LEGO set? | 18-36 months |
+| 1 | When does the Jaws set retire? | July 31, 2026 |
 | 2 | In what waves do LEGO retirmenets occur in? | January, June/July, and December |
-| 3 | When does the lifecyle of a LEGO set start for IDEAS set? | When the LEGO set is officially released via the LEGO store, so not from ideation, voting, bricklink programs. |
+| 3 | What happens to LEGO set prices after retirement? | Some go up, some stay flat, some decrease. |
 | 4 | What does the official LEGO store mark on sets that are retiring soon? | Last Chance to Buy or Retiring Soon |
-| 5 | As of June 2026, what is the one LEGO IDEAS set that is marked to be retiring soon? | Dungeons & Dragons: Red Dragon's Tale |
+| 5 | Is there a spreadsheet that tracks LEGO retirement dates? | Yes, Brick Tap does. |
 
 ---
 
@@ -148,5 +148,7 @@
 Changed tokens to ~150 tokens from ~300 tokens to ensure no data gets lost from the 256 token limit from the embedding model. In addition, there were too few chunks from the previous token number so the chunk size was made to be smaller.
 
 **Milestone 4 — Embedding and retrieval:**
+
+
 
 **Milestone 5 — Generation and interface:**

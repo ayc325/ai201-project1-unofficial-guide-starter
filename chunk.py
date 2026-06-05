@@ -42,6 +42,57 @@ def est_tokens(text: str) -> int:
 
 
 # ── Structured (CSV / Sheets) ────────────────────────────────────────────────
+#
+# Raw tab-separated rows embed poorly — all-MiniLM-L6-v2 is trained on prose,
+# so a query like "when does D&D retire?" won't match a tab-separated row even
+# when that row has the exact answer. Converting each row to a natural language
+# sentence before embedding fixes this.
+
+def _row_to_prose_retirement(cols: dict[str, str]) -> str:
+    """brick_tap_retirement_dates.txt row → natural language sentence."""
+    theme    = cols.get("Theme", "").strip()
+    subtheme = cols.get("Subtheme", "").strip().strip("-").strip()
+    set_num  = cols.get("Set #", "").strip()
+    name     = cols.get("Set Name", "").strip()
+    pieces   = cols.get("Piece Count", "").strip()
+    retire   = cols.get("Retirement Date", "").strip()
+    notes    = cols.get("Notes: (Exclusivity, release, etc.)", "").strip()
+
+    parts = [f"LEGO {theme} set {set_num}, {name}, retires {retire}."]
+    if subtheme:
+        parts.append(f"Subtheme: {subtheme}.")
+    if pieces:
+        parts.append(f"{pieces} pieces.")
+    if notes:
+        parts.append(notes)
+    return " ".join(parts)
+
+
+def _row_to_prose_ideas(cols: dict[str, str]) -> str:
+    """brick_tap_ideas.txt row → natural language sentence."""
+    set_num  = cols.get("Set #", "TBA").strip()
+    name     = cols.get("Set Name", "").strip()
+    pieces   = cols.get("Piece Count", "").strip()
+    release  = cols.get("Release Date", "TBA").strip()
+    price    = cols.get("Rumored Price", "").strip()
+    notes    = cols.get("Notes", "").strip()
+
+    label = f"set {set_num}" if set_num and set_num != "TBA" else "set (number TBA)"
+    parts = [f"Upcoming LEGO Ideas {label}, {name}. Expected release: {release}."]
+    if pieces and pieces != "TBA":
+        parts.append(f"{pieces} pieces.")
+    if price and price != "TBA":
+        parts.append(f"Rumored price: {price}.")
+    if notes:
+        parts.append(notes)
+    return " ".join(parts)
+
+
+_ROW_FORMATTERS = {
+    "brick_tap_retirement_dates.txt": _row_to_prose_retirement,
+    "brick_tap_ideas.txt": _row_to_prose_ideas,
+}
+
 
 def chunk_structured(text: str, source: str) -> list[Chunk]:
     lines = text.splitlines()
@@ -49,53 +100,41 @@ def chunk_structured(text: str, source: str) -> list[Chunk]:
     # Header = first line with at least 3 non-empty tab-separated cells.
     # This skips metadata rows (e.g. the "Check out Brick Tap…" line in
     # brick_tap_ideas.txt that only has 2 non-empty cells).
-    header = ""
+    col_names: list[str] = []
     data_start = 0
     for i, line in enumerate(lines):
-        cells = [c.strip() for c in line.split("\t") if c.strip()]
-        if len(cells) >= 3:
-            header = line.strip()
+        cells = [c.strip() for c in line.split("\t")]
+        non_empty = [c for c in cells if c]
+        if len(non_empty) >= 3:
+            col_names = cells  # keep all cells including empty ones (preserve column positions)
             data_start = i + 1
             break
 
-    data_lines = []
+    formatter = _ROW_FORMATTERS.get(source)
+
+    chunks: list[Chunk] = []
     for line in lines[data_start:]:
         stripped = line.strip()
-        # Skip blank lines and section-header rows (e.g. "Ideas Pipeline")
-        # that have no meaningful tab-separated data cells.
         if not stripped:
             continue
-        cells = [c.strip() for c in stripped.split("\t") if c.strip()]
-        if len(cells) < 2:
-            continue
-        data_lines.append(stripped)
+        cells = [c.strip() for c in stripped.split("\t")]
+        non_empty = [c for c in cells if c]
+        if len(non_empty) < 2:
+            continue  # skip section-header rows like "Ideas Pipeline"
 
-    header_tokens = est_tokens(header)
-    chunks: list[Chunk] = []
-    batch: list[str] = []
-    batch_tokens = 0
+        if formatter and col_names:
+            # Build a column→value dict and convert to prose
+            row_dict = {col_names[i]: cells[i] for i in range(min(len(col_names), len(cells)))}
+            chunk_text = formatter(row_dict)
+        else:
+            # Fallback: key: value pairs (still better than raw tabs)
+            chunk_text = " | ".join(
+                f"{col_names[i]}: {cells[i]}"
+                for i in range(min(len(col_names), len(cells)))
+                if col_names[i] and cells[i]
+            )
 
-    for line in data_lines:
-        lt = est_tokens(line)
-        if batch and header_tokens + batch_tokens + lt > MAX_TOKENS:
-            chunks.append(Chunk(
-                text=header + "\n" + "\n".join(batch),
-                source=source,
-                index=len(chunks),
-                strategy="fixed-size",
-            ))
-            batch = []
-            batch_tokens = 0
-        batch.append(line)
-        batch_tokens += lt
-
-    if batch:
-        chunks.append(Chunk(
-            text=header + "\n" + "\n".join(batch),
-            source=source,
-            index=len(chunks),
-            strategy="fixed-size",
-        ))
+        chunks.append(Chunk(chunk_text, source, len(chunks), "fixed-size"))
 
     return chunks
 
