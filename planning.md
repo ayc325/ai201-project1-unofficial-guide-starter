@@ -67,7 +67,7 @@
 **Embedding model:**
      - all-MiniLM-L6-v2
 **Top-k:**
-     - 5 for now, maybe increase it to 7-8 if retrieval is missing important info
+     - 7 (increased from 5 — date-specific queries need the extra window to surface the right retirement date chunk alongside similar-scoring chunks from other dates)
 **Production tradeoff reflection:**
      - Context length: text-embedding-3-large (OpenAI) or embed-english-v3.0 (Cohere) handle longer chunks without truncation
      - Domain accuracy: a model fine-tuned on product/retail text would handle set names and part numbers better
@@ -145,10 +145,21 @@
 
 **Milestone 3 — Ingestion and chunking:**
 
-Changed tokens to ~150 tokens from ~300 tokens to ensure no data gets lost from the 256 token limit from the embedding model. In addition, there were too few chunks from the previous token number so the chunk size was made to be smaller.
+- Reduced max chunk size from ~300 to ~150 tokens to stay safely under the embedding model's 256-token hard limit and produce more focused, retrievable chunks.
+- Structured data (CSV rows) were originally kept as raw tab-separated text, which embedded poorly against natural language queries. Fixed by converting each row to a prose sentence before chunking.
+- `bricklink_faq.txt` was trimmed from 16 pages to a single Q&A covering only the LEGO IDEAS vs. BrickLink Designer Program distinction, which is the only content relevant to this project.
+- `brick_tap_ideas.txt` was cleaned to remove rows where the release date was TBA, keeping only the 2 sets with confirmed release dates (21365, 21366).
+- Retirement date rows were later regrouped by retirement date (in Milestone 4) after testing showed individual rows produced structurally identical embeddings that didn't rank by date.
 
 **Milestone 4 — Embedding and retrieval:**
 
+Used `embed.py` with `all-MiniLM-L6-v2` via sentence-transformers to embed all chunks and store them in ChromaDB with source metadata (filename, chunk index, strategy). Key changes made during implementation:
 
+- Structured data chunks were originally formatted as raw tab-separated rows, which embedded poorly against natural language queries. Fixed by converting each row to a natural language sentence in `chunk.py` (e.g. "LEGO Ideas set 21348, Dungeons & Dragons: Red Dragon's Tale, retires July 31, 2026.").
+- Month abbreviations ("Jul", "Dec") were expanded to full names so query phrasing like "July 31, 2026" matches chunk text exactly.
+- Retirement date rows were regrouped by date rather than one-row-per-chunk, so a query like "which sets retire by July 31, 2026?" retrieves a single chunk listing all sets for that date instead of competing against 25 structurally identical rows.
+- Top-k increased from 5 to 7 after testing showed the correct retirement date chunk landing at rank 6 for date-specific queries.
 
 **Milestone 5 — Generation and interface:**
+
+Used Groq (`llama-3.3-70b-versatile`) in `query.py` for generation. The prompt passes retrieved chunks as numbered context blocks and instructs the model to answer only from those documents, cite sources, and say "I don't have enough information" if the context is insufficient. Built a Gradio interface in `app.py` with a preset question dropdown (matching the 5 evaluation questions from the Evaluation Plan) and a free-text input. Answers and retrieved source filenames are displayed separately so responses are traceable.

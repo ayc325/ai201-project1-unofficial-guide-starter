@@ -22,7 +22,7 @@ from chunk import DOCUMENTS_DIR, Chunk, chunk_file
 CHROMA_PATH = Path(__file__).parent / "chroma_db"
 COLLECTION_NAME = "lego_ideas_retirement"
 EMBED_MODEL = "all-MiniLM-L6-v2"
-TOP_K = 5
+TOP_K = 7
 
 # Module-level singletons — loaded once, reused across calls to retrieve()
 _model: Optional[SentenceTransformer] = None

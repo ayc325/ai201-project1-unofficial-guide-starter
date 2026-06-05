@@ -48,6 +48,20 @@ def est_tokens(text: str) -> int:
 # when that row has the exact answer. Converting each row to a natural language
 # sentence before embedding fixes this.
 
+_MONTH_ABBR = {
+    "Jan": "January", "Feb": "February", "Mar": "March", "Apr": "April",
+    "May": "May",     "Jun": "June",     "Jul": "July",  "Aug": "August",
+    "Sep": "September", "Oct": "October", "Nov": "November", "Dec": "December",
+}
+
+def _expand_date(date_str: str) -> str:
+    """Expand abbreviated month names so queries using full names match exactly."""
+    for abbr, full in _MONTH_ABBR.items():
+        if date_str.startswith(abbr + " "):
+            return full + date_str[len(abbr):]
+    return date_str
+
+
 def _row_to_prose_retirement(cols: dict[str, str]) -> str:
     """brick_tap_retirement_dates.txt row → natural language sentence."""
     theme    = cols.get("Theme", "").strip()
@@ -55,7 +69,7 @@ def _row_to_prose_retirement(cols: dict[str, str]) -> str:
     set_num  = cols.get("Set #", "").strip()
     name     = cols.get("Set Name", "").strip()
     pieces   = cols.get("Piece Count", "").strip()
-    retire   = cols.get("Retirement Date", "").strip()
+    retire   = _expand_date(cols.get("Retirement Date", "").strip())
     notes    = cols.get("Notes: (Exclusivity, release, etc.)", "").strip()
 
     parts = [f"LEGO {theme} set {set_num}, {name}, retires {retire}."]
@@ -94,7 +108,70 @@ _ROW_FORMATTERS = {
 }
 
 
+def _chunk_retirement_by_date(text: str, source: str) -> list[Chunk]:
+    """
+    Group retirement date rows by retirement date, one chunk per date.
+    This makes queries like "which sets retire July 31, 2026?" retrieve a
+    single chunk listing every set for that date rather than competing against
+    25 individual-row chunks that all look structurally identical to the model.
+    """
+    lines = text.splitlines()
+    col_names: list[str] = []
+    data_start = 0
+    for i, line in enumerate(lines):
+        cells = [c.strip() for c in line.split("\t")]
+        if len([c for c in cells if c]) >= 3:
+            col_names = cells
+            data_start = i + 1
+            break
+
+    # Group rows by retirement date, preserving insertion order
+    from collections import defaultdict
+    groups: dict[str, list[str]] = defaultdict(list)
+
+    for line in lines[data_start:]:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        cells = [c.strip() for c in stripped.split("\t")]
+        if len([c for c in cells if c]) < 2:
+            continue
+        row_dict = {col_names[i]: cells[i] for i in range(min(len(col_names), len(cells)))}
+
+        retire_date = _expand_date(row_dict.get("Retirement Date", "").strip())
+        if not retire_date:
+            continue
+
+        set_num = row_dict.get("Set #", "").strip()
+        name    = row_dict.get("Set Name", "").strip()
+        pieces  = row_dict.get("Piece Count", "").strip()
+        notes   = row_dict.get("Notes: (Exclusivity, release, etc.)", "").strip()
+
+        entry = f"set {set_num} {name}"
+        if pieces:
+            entry += f" ({pieces} pieces)"
+        if notes:
+            entry += f" — {notes}"
+        groups[retire_date].append(entry)
+
+    chunks: list[Chunk] = []
+    for date, entries in groups.items():
+        count = len(entries)
+        set_list = "; ".join(entries)
+        text_block = (
+            f"LEGO Ideas sets retiring {date} ({count} set{'s' if count != 1 else ''}): "
+            f"{set_list}."
+        )
+        chunks.append(Chunk(text_block, source, len(chunks), "fixed-size"))
+
+    return chunks
+
+
 def chunk_structured(text: str, source: str) -> list[Chunk]:
+    # Retirement dates file: group by date so one chunk covers all sets per date
+    if source == "brick_tap_retirement_dates.txt":
+        return _chunk_retirement_by_date(text, source)
+
     lines = text.splitlines()
 
     # Header = first line with at least 3 non-empty tab-separated cells.
