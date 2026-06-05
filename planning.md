@@ -24,9 +24,9 @@
 | 1 | LEGO Official Website | Official LEGO Website | https://www.lego.com/en-us/categories/last-chance-to-buy?filters.i0.key=categories.id&filters.i0.values.i0=2237887c-51ec-4e65-becf-117ae6180bf0 |
 | 2 | Stone Wars | LEGO News Site | https://stonewars.com/retiring-2026/#lego-ideas |
 | 3 | Brick Fanatics | LEGO News Site | https://www.brickfanatics.com/every-lego-set-retiring-this-year-and-beyond#retiring-lego-ideas-sets |
-| 4 | Brick Tap - LEGO Ideas - ALll upcoming sets (Update soon) | CSV | "Brick Tap - LEGO Ideas - ALll upcoming sets (Update soon)".csv |
+| 4 | Brick Tap - LEGO Ideas - All upcoming sets (Update soon) | CSV | "Brick Tap - LEGO Ideas - All upcoming sets (Update soon)".csv |
 | 5 | BrickLink FAQ | FAQ Page | https://www.bricklink.com/v3/designer-program/faq.page |
-| 6 | Brick Tap - LEGO Calendar - Promos, Sales and Point Events| Google Sheets | https://docs.google.com/spreadsheets/d/16muL-6LmJFG4SPnTKWLKOiFDBR2eMiijVyuiAusz_UE/edit?gid=232362826#gid=232362826 |
+| 6 | Brick Tap - LEGO Set List - Retirement Dates + Store Exclusivity | Google Sheets | https://docs.google.com/spreadsheets/d/1rlYfEXtNKxUOZt2Mfv0H17DvK7bj6Pe0CuYwq6ay8WA/edit?usp=sharing |
 | 7 | Can you predict which sets retire when? | Reddit post | https://www.reddit.com/r/lego/comments/1cfflb2/can_you_predict_which_sets_retire_when/ |
 | 8 | New to the hobby, curious to find out when sets retire | Reddit post | https://www.reddit.com/r/lego/comments/1l1tm77/new_to_the_hobby_curious_to_find_out_when_sets/ |
 | 9 | Brick Economy | URL | https://www.brickeconomy.com/sets/retiring-soon |
