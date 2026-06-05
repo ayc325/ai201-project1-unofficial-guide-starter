@@ -10,7 +10,7 @@
 ## Domain
 
 <!-- What domain did you choose? Why is this knowledge valuable and hard to find through official channels? -->
-     Retiring "Ideas" LEGO sets are useful to track because once LEGO announces a set is retiring, remaining retail stock often disappears quickly, making the set harder to find at regular prices.
+     Retiring LEGO IDEAS sets are useful to track because once LEGO announces a set is retiring, remaining retail stock often disappears quickly, making the set harder to find at regular prices.
 
 ---
 
@@ -24,13 +24,13 @@
 | 1 | LEGO Official Website | Official LEGO Website | https://www.lego.com/en-us/categories/last-chance-to-buy?filters.i0.key=categories.id&filters.i0.values.i0=2237887c-51ec-4e65-becf-117ae6180bf0 |
 | 2 | Stone Wars | LEGO News Site | https://stonewars.com/retiring-2026/#lego-ideas |
 | 3 | Brick Fanatics | LEGO News Site | https://www.brickfanatics.com/every-lego-set-retiring-this-year-and-beyond#retiring-lego-ideas-sets |
-| 4 | Brick Tap - LEGO Set List - Retirement Dates + Store Exclusivity | CSV | "Brick Tap - LEGO Set List - Retirement Dates + Store Exclusivity".csv  |
+| 4 | Brick Tap - LEGO Ideas - ALll upcoming sets (Update soon) | CSV | "Brick Tap - LEGO Ideas - ALll upcoming sets (Update soon)".csv |
 | 5 | BrickLink FAQ | FAQ Page | https://www.bricklink.com/v3/designer-program/faq.page |
-| 6 | | | |
-| 7 | | | |
-| 8 | | | |
-| 9 | | | |
-| 10 | | | |
+| 6 | Brick Tap - LEGO Calendar - Promos, Sales and Point Events| Google Sheets | https://docs.google.com/spreadsheets/d/16muL-6LmJFG4SPnTKWLKOiFDBR2eMiijVyuiAusz_UE/edit?gid=232362826#gid=232362826 |
+| 7 | Can you predict which sets retire when? | Reddit post | https://www.reddit.com/r/lego/comments/1cfflb2/can_you_predict_which_sets_retire_when/ |
+| 8 | New to the hobby, curious to find out when sets retire | Reddit post | https://www.reddit.com/r/lego/comments/1l1tm77/new_to_the_hobby_curious_to_find_out_when_sets/ |
+| 9 | Brick Economy | URL | https://www.brickeconomy.com/sets/retiring-soon |
+| 10 | The Complete Guide to LEGO Set Retirement: What it means for Collectors | URL | https://bamgoodbricks.com/blogs/lego-news/the-complete-guide-to-lego%C2%AE-set-retirement-what-it-means-for-collectors |
 
 ---
 
@@ -40,12 +40,19 @@
      State your chunk size (in tokens or characters), overlap size, and explain why those
      numbers fit the structure of your documents.
      A review-heavy corpus warrants different chunking than a long FAQ. -->
+     - Hybrid Chunking
 
 **Chunk size:**
-
+     - Structured data (CSV, Sheets, product listings): Fixed-size with row-boundary alignment — never split mid-row. ~1 row per chunk, or batch small rows together up to ~300 tokens.
+     - FAQ: Semantic — one Q+A pair per chunk. These are already naturally segmented.
+     - Articles/prose: Recursive — split by heading → paragraph → sentence. This respects the document's own hierarchy and avoids the waste of fixed-size cutting through a paragraph mid-thought.
+     - Reddit threads: Semantic — one top-level comment (plus direct replies) per chunk, since a comment only makes sense with its immediate context.
 **Overlap:**
-
+     - 50-75 tokens
 **Reasoning:**
+     - Pure fixed-size cuts through table rows and FAQ answers, corrupting retrieval.
+     Pure semantic (embedding-similarity-based) is computationally heavy and overkill for data that already has explicit structure (CSV rows, FAQ boundaries).
+     Pure recursive works for prose but produces oddly-shaped chunks from tabular data.
 
 ---
 
@@ -58,11 +65,14 @@
      support, accuracy on domain-specific text, latency? -->
 
 **Embedding model:**
-
+     - all-MiniLM-L6-v2
 **Top-k:**
-
+     - 5 for now, maybe increase it to 7-8 if retrieval is missing important info
 **Production tradeoff reflection:**
-
+     - Context length: text-embedding-3-large (OpenAI) or embed-english-v3.0 (Cohere) handle longer chunks without truncation
+     - Domain accuracy: a model fine-tuned on product/retail text would handle set names and part numbers better
+     - Latency: all-MiniLM-L6-v2 runs locally and is fast; larger models add API round-trip latency
+     - Some inaccuracy is ok because there's no harm in the LLM predicting a LEGO set that may retire this year vs next year since all LEGO sets eventually retire
 ---
 
 ## Evaluation Plan
@@ -74,11 +84,11 @@
 
 | # | Question | Expected answer |
 |---|----------|-----------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| 1 | What is the approximate lifecycle length of a LEGO set? | 18-36 months |
+| 2 | In what waves do LEGO retirmenets occur in? | January, June/July, and December |
+| 3 | When does the lifecyle of a LEGO set start for IDEAS set? | When the LEGO set is officially released via the LEGO store, so not from ideation, voting, bricklink programs. |
+| 4 | What does the official LEGO store mark on sets that are retiring soon? | Last Chance to Buy or Retiring Soon |
+| 5 | As of June 2026, what is the one LEGO IDEAS set that is marked to be retiring soon? | Dungeons & Dragons: Red Dragon's Tale |
 
 ---
 
@@ -88,9 +98,9 @@
      Consider: noisy or inconsistent documents, missing source attribution, off-topic
      retrieval, chunks that split key information across boundaries. -->
 
-1.
+1. Some documents are noisy since it's not JUST LEGO IDEAS sets and have a bunch of like header/footer/ads etc..
 
-2.
+2. Various file types that may struggle with the various chunking styles
 
 ---
 
@@ -101,6 +111,20 @@
      Label each stage with the tool or library you're using.
      You can use ASCII art, a Mermaid diagram, or embed a sketch as an image.
      You'll use this diagram as context when prompting AI tools to implement each stage. -->
+
+```
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│  1. INGESTION    │  │  2. CHUNKING     │  │  3. EMBEDDING +      │  │  4. RETRIEVAL    │  │  5. GENERATION   │
+│                  │─▶│                  │─▶│     VECTOR STORE     │─▶│                  │─▶│                  │
+│  requests/BS4    │  │  Fixed-size      │  │  all-MiniLM-L6-v2    │  │  cosine sim      │  │  Claude API      │
+│  pandas - CSV    │  │  (CSV, Sheets,   │  │  sentence-           │  │  top-k = 5       │  │  (claude-sonnet) │
+│  PRAW - Reddit   │  │   listings)      │  │  transformers        │  │                  │  │                  │
+│                  │  │  Semantic        │  │  ChromaDB            │  │                  │  │                  │
+│                  │  │  (FAQ, Reddit)   │  │                      │  │                  │  │                  │
+│                  │  │  Recursive       │  │                      │  │                  │  │                  │
+│                  │  │  (articles)      │  │                      │  │                  │  │                  │
+└──────────────────┘  └──────────────────┘  └──────────────────────┘  └──────────────────┘  └──────────────────┘
+```
 
 ---
 
@@ -115,6 +139,9 @@
      "I'll use AI to help me code" is not a plan.
      "I'll give Claude my Chunking Strategy section and ask it to implement chunk_text()
      with my specified chunk size and overlap" is a plan. -->
+
+     - I'll give Claude my Chunking Strategy section along with the information of the strategies I'm allowed to use and ask it to implement chunk_text() with the specified chunk size and overlap for each type of source.
+     - I'll give Claude the sources in my Documents section to clean up uncessary information to clean up and refine for better information on the embedding and retrieval step.
 
 **Milestone 3 — Ingestion and chunking:**
 
