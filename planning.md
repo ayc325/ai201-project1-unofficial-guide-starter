@@ -43,7 +43,7 @@
      - Hybrid Chunking
 
 **Chunk size:**
-     - Structured data (CSV, Sheets, product listings): Fixed-size with row-boundary alignment — never split mid-row. ~1 row per chunk, or batch small rows together up to ~300 tokens.
+     - Structured data (CSV, Sheets, product listings): Fixed-size with row-boundary alignment — never split mid-row. ~1 row per chunk, or batch small rows together up to ~200 tokens (staying within all-MiniLM-L6-v2's 256-token limit).
      - FAQ: Semantic — one Q+A pair per chunk. These are already naturally segmented.
      - Articles/prose: Recursive — split by heading → paragraph → sentence. This respects the document's own hierarchy and avoids the waste of fixed-size cutting through a paragraph mid-thought.
      - Reddit threads: Semantic — one top-level comment (plus direct replies) per chunk, since a comment only makes sense with its immediate context.
